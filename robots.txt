@@ -1,0 +1,18 @@
+# robots.txt for Flappy Bird Game
+# Domain: https://fleppybird.onrender.com
+# Last Updated: 2026-04-01
+
+User-agent: *
+Allow: /
+Crawl-delay: 1
+Sitemap: https://fleppybird.onrender.com/sitemap.xml
+
+# Googlebot
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Bingbot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
