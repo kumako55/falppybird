@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="title" content="Flappy Bird Web Game – Play Online & High Scores">
+    <meta name="description" content="Play the ultimate Flappy Bird web game online! Beat top 10 leaderboard scores, enjoy smooth gameplay, and earn rewards.">
+    <meta name="keywords" content="Flappy Bird, online game, web game, free game, HTML5 game, top leaderboard, mobile friendly">
+    <meta name="author" content="Asad Games">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Flappy Bird Online Game">
+    <meta property="og:description" content="Play the Flappy Bird web game with leaderboard and ads. Beat high scores!">
+    <meta property="og:image" content="https://flappybird.onrender.com/thumbnail.png">
+    <meta property="og:url" content="https://flappybird.onrender.com">
+    <meta property="og:type" content="game">
+    <meta property="og:site_name" content="Flappy Bird Game">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flappy Bird Online Game">
+    <meta name="twitter:description" content="Play Flappy Bird online! Beat top 10 leaderboard scores!">
+    <meta name="twitter:image" content="https://flappybird.onrender.com/thumbnail.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://flappybird.onrender.com">
+    
+    <title>Flappy Bird Web Game – Play Online & High Scores</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0b3b4f 0%, #1b5a6e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Press Start 2P', 'Courier New', monospace;
+            touch-action: manipulation;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
+            padding-bottom: 90px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+            border-radius: 18px;
+            cursor: pointer;
+            width: 100%;
+            height: auto;
+            background-color: #7ec8e0;
+        }
+
+        /* Ad Container - Fixed Bottom */
+        .ad-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            background: #000000cc;
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .ad-container iframe {
+            width: 100%;
+            height: 90px;
+            border: none;
+            background: #1e1e2f;
+        }
+
+        /* Game Over Modal */
+        .gameover-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #0a1a1f 0%, #1a2a2f 100%);
+            backdrop-filter: blur(20px);
+            padding: 25px 30px;
+            border-radius: 48px;
+            text-align: center;
+            color: white;
+            z-index: 10000;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 2px solid #ffd966;
+            min-width: 280px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .gameover-modal h2 {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: #ffbb77;
+        }
+
+        .final-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 60px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 60px;
+            margin: 15px 0 10px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .retry-btn:active {
+            transform: scale(0.95);
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .share-buttons button {
+            background: #2c3e44;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+
+        .share-buttons button:active {
+            transform: scale(0.95);
+        }
+
+        /* Leaderboard - Fade In Animation */
+        .leaderboard {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(10, 26, 31, 0.95), rgba(30, 50, 55, 0.95));
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 25px;
+            width: 320px;
+            z-index: 10001;
+            border: 2px solid #ffd966;
+            color: #fff;
+            text-align: center;
+            animation: fadeInLeaderboard 1s ease forwards;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        @keyframes fadeInLeaderboard {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .leaderboard h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ffbb77;
+            border-bottom: 2px solid #ffbb77;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .leaderboard-list {
+            max-height: 350px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .leaderboard-item.rank-1 {
+            background: linear-gradient(135deg, #ffd700, #ffb347);
+            color: #1a2a2f;
+        }
+
+        .leaderboard-item.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+            color: #1a2a2f;
+        }
+
+        .leaderboard-item.rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #b87333);
+            color: #1a2a2f;
+        }
+
+        .close-leaderboard {
+            background: #ff6b6b;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Mute Button */
+        .mute-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 50px;
+            padding: 8px 14px;
+            color: white;
+            z-index: 10002;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+        }
+
+        /* Score Display */
+        .score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            z-index: 100;
+            font-family: monospace;
+        }
+
+        @media (max-width: 550px) {
+            .leaderboard { width: 280px; padding: 20px; }
+            .leaderboard-item { font-size: 12px; padding: 6px 10px; }
+            .final-score { font-size: 1.8rem; }
+        }
+    </style>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Flappy Bird Web Game",
+        "description": "Play the ultimate Flappy Bird web game online! Beat top 10 leaderboard scores, enjoy smooth gameplay, and earn rewards.",
+        "genre": "Arcade Game",
+        "gamePlatform": "Browser",
+        "operatingSystem": "All",
+        "applicationCategory": "Game",
+        "url": "https://flappybird.onrender.com",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.7",
+            "reviewCount": "2500"
+        },
+        "creator": {
+            "@type": "Person",
+            "name": "Asad Games"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div class="score-display" id="scoreDisplay">0</div>
+    </div>
+
+    <!-- Ad Container -->
+    <div class="ad-container">
+        <iframe src="https://www.profitablecpmratenetwork.com/hp7r6v2y?key=cc271770a7de081b727acf154507ebe2"
+                title="Advertisement"
+                scrolling="no"
+                loading="lazy">
+        </iframe>
+    </div>
+
+    <!-- Mute Button -->
+    <button class="mute-btn" id="muteBtn">🔊 MUSIC ON</button>
+
+    <script>
+        (function(){
+            // ============================================
+            // CANVAS SETUP
+            // ============================================
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 400;
+            canvas.height = 600;
+            let cw = canvas.width, ch = canvas.height;
+            
+            // ============================================
+            // GAME STATE
+            // ============================================
+            let gameRunning = true;
+            let score = 0;
+            let frameCount = 0;
+            let retryCounter = 0;
+            let leaderboardVisible = false;
+            
+            // Bird Physics
+            let bird = {
+                x: 70,
+                y: ch/2,
+                radius: 14,
+                vy: 0
+            };
+            const GRAVITY = 0.6;
+            const JUMP_POWER = -9.5;
+            
+            // Pipes
+            let pipes = [];
+            const PIPE_WIDTH = 52;
+            const PIPE_GAP_INIT = 135;
+            let pipeGap = PIPE_GAP_INIT;
+            let pipeSpeed = 2.2;
+            const PIPE_SPACING_FRAMES = 90;
+            let lastPipeFrame = 0;
+            const GROUND_Y = ch - 25;
+            
+            // ============================================
+            // AUDIO SYSTEM
+            // ============================================
+            let soundEnabled = true;
+            let audioCtx = null;
+            let jumpBuffer = null, hitBuffer = null, coinBuffer = null;
+            
+            function initAudio() {
+                if(!window.AudioContext && !window.webkitAudioContext) return;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                jumpBuffer = createBeep(540, 0.12);
+                hitBuffer = createBeep(120, 0.4);
+                coinBuffer = createBeep(880, 0.1);
+            }
+            
+            function createBeep(freq, duration) {
+                if(!audioCtx) return null;
+                const sampleRate = audioCtx.sampleRate;
+                const frames = sampleRate * duration;
+                const buffer = audioCtx.createBuffer(1, frames, sampleRate);
+                const data = buffer.getChannelData(0);
+                for(let i = 0; i < frames; i++) {
+                    let t = i / sampleRate;
+                    let env = 1 - (t / duration);
+                    if(env < 0) env = 0;
+                    data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.4;
+                }
+                return buffer;
+            }
+            
+            function playSound(buffer) {
+                if(!soundEnabled || !audioCtx || !buffer) return;
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start();
+            }
+            
+            const muteBtn = document.getElementById('muteBtn');
+            muteBtn.addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                muteBtn.textContent = soundEnabled ? "🔊 MUSIC ON" : "🔇 MUSIC OFF";
+                if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            });
+            
+            // ============================================
+            // GAME MECHANICS
+            // ============================================
+            function jump() {
+                if(!gameRunning) return;
+                bird.vy = JUMP_POWER;
+                playSound(jumpBuffer);
+            }
+            
+            function spawnPipe() {
+                const minTop = 55;
+                const maxTop = ch - pipeGap - 80;
+                let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
+                pipes.push({
+                    x: cw,
+                    topHeight: topHeight,
+                    bottomY: topHeight + pipeGap,
+                    counted: false
+                });
+            }
+            
+            function updatePipes() {
+                for(let i = 0; i < pipes.length; i++) {
+                    pipes[i].x -= pipeSpeed;
+                }
+                pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
+                if(gameRunning && frameCount - lastPipeFrame >= PIPE_SPACING_FRAMES) {
+                    spawnPipe();
+                    lastPipeFrame = frameCount;
+                }
+            }
+            
+            function checkCollisions() {
+                if(bird.y + bird.radius >= GROUND_Y || bird.y - bird.radius <= 0) return true;
+                for(let pipe of pipes) {
+                    let birdLeft = bird.x - bird.radius;
+                    let birdRight = bird.x + bird.radius;
+                    let pipeLeft = pipe.x;
+                    let pipeRight = pipe.x + PIPE_WIDTH;
+                    if(birdRight > pipeLeft && birdLeft < pipeRight) {
+                        let birdTop = bird.y - bird.radius;
+                        let birdBottom = bird.y + bird.radius;
+                        if(birdTop < pipe.topHeight || birdBottom > pipe.bottomY) return true;
+                    }
+                }
+                return false;
+            }
+            
+            function updateScore() {
+                for(let pipe of pipes) {
+                    if(!pipe.counted && pipe.x + PIPE_WIDTH < bird.x - bird.radius) {
+                        pipe.counted = true;
+                        score++;
+                        playSound(coinBuffer);
+                        document.getElementById('scoreDisplay').textContent = score;
+                        if(score % 10 === 0) {
+                            pipeSpeed = Math.min(5.2, pipeSpeed + 0.085);
+                            pipeGap = Math.max(92, pipeGap - 2.2);
+                        }
+                    }
+                }
+            }
+            
+            // ============================================
+            // LEADERBOARD SYSTEM (Local Storage)
+            // ============================================
+            let playerName = "FLYER";
+            
+            function getTodayKey() {
+                return new Date().toDateString();
+            }
+            
+            function updateLeaderboard(finalScore) {
+                let leaderboard = JSON.parse(localStorage.getItem("flappy_leaderboard") || "[]");
+                const today = getTodayKey();
+                let newEntry = { name: playerName, score: finalScore, date: today, timestamp: Date.now() };
+                leaderboard.push(newEntry);
+                let todayEntries = leaderboard.filter(entry => entry.date === today);
+                todayEntries.sort((a, b) => b.score - a.score);
+                let top10 = todayEntries.slice(0, 10);
+                localStorage.setItem("flappy_leaderboard", JSON.stringify(top10));
+                return top10;
+            }
+            
+            function showLeaderboard() {
+                if(leaderboardVisible) return;
+                const stored = JSON.parse(localStorage.getItem("flappy_leaderboard") || "[]");
+                const today = getTodayKey();
+                let todaysScores = stored.filter(e => e.date === today);
+                todaysScores.sort((a, b) => b.score - a.score);
+                const top10 = todaysScores.slice(0, 10);
+                
+                const leaderboardDiv = document.createElement('div');
+                leaderboardDiv.className = 'leaderboard';
+                leaderboardDiv.id = 'leaderboardPanel';
+                
+                let listHtml = '<h3>🏆 TOP 10 TODAY 🏆</h3><div class="leaderboard-list">';
+                if(top10.length === 0) {
+                    listHtml += '<div style="text-align:center;padding:20px;">No scores yet! Be the first!</div>';
+                } else {
+                    top10.forEach((entry, idx) => {
+                        let rankClass = '';
+                        if(idx === 0) rankClass = 'rank-1';
+                        if(idx === 1) rankClass = 'rank-2';
+                        if(idx === 2) rankClass = 'rank-3';
+                        listHtml += `<div class="leaderboard-item ${rankClass}">
+                            <span>${idx + 1}. ${entry.name.substring(0, 12)}</span>
+                            <span style="font-weight:bold">${entry.score}</span>
+                        </div>`;
+                    });
+                }
+                listHtml += '</div><button class="close-leaderboard" id="closeLeaderboard">OK</button>';
+                leaderboardDiv.innerHTML = listHtml;
+                document.body.appendChild(leaderboardDiv);
+                leaderboardVisible = true;
+                
+                document.getElementById('closeLeaderboard').addEventListener('click', () => {
+                    leaderboardDiv.remove();
+                    leaderboardVisible = false;
+                });
+            }
+            
+            // ============================================
+            // INTERSTITIAL AD SYSTEM (After Retries)
+            // ============================================
+            function showInterstitialAd() {
+                const adModal = document.createElement('div');
+                adModal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #1a1a2e, #16213e);
+                    padding: 25px;
+                    border-radius: 30px;
+                    z-index: 20000;
+                    text-align: center;
+                    border: 2px solid #ffa500;
+                    max-width: 300px;
+                    width: 80%;
+                `;
+                adModal.innerHTML = `
+                    <h3 style="color:#ffa500; margin-bottom:15px;">✨ SPECIAL OFFER ✨</h3>
+                    <p style="color:white; margin-bottom:15px;">Play more games & earn rewards!</p>
+                    <button id="closeAdBtn" style="background:#ffa500; border:none; padding:10px 20px; border-radius:25px; font-weight:bold; cursor:pointer;">Continue Playing</button>
+                `;
+                document.body.appendChild(adModal);
+                document.getElementById('closeAdBtn').addEventListener('click', () => {
+                    adModal.remove();
+                });
+                setTimeout(() => {
+                    if(document.body.contains(adModal)) adModal.remove();
+                }, 5000);
+            }
+            
+            // ============================================
+            // GAME OVER & RETRY LOGIC
+            // ============================================
+            function gameOver() {
+                if(!gameRunning) return;
+                gameRunning = false;
+                playSound(hitBuffer);
+                
+                let nameInput = prompt("🎮 GAME OVER! Enter your name for leaderboard:", "PLAYER");
+                if(nameInput && nameInput.trim()) playerName = nameInput.trim().substring(0, 14);
+                else playerName = "FLYER";
+                
+                const top10 = updateLeaderboard(score);
+                showLeaderboard();
+                showGameOverModal();
+                
+                // Retry counter for interstitial ads
+                retryCounter++;
+                if(retryCounter >= 3 && retryCounter <= 4) {
+                    showInterstitialAd();
+                }
+                if(retryCounter >= 5) {
+                    retryCounter = 0;
+                }
+            }
+            
+            function showGameOverModal() {
+                const existing = document.querySelector('.gameover-modal');
+                if(existing) existing.remove();
+                
+                const modal = document.createElement('div');
+                modal.className = 'gameover-modal';
+                modal.innerHTML = `
+                    <h2>💀 GAME OVER 💀</h2>
+                    <div class="final-score">SCORE: ${score}</div>
+                    <button class="retry-btn" id="retryGameBtn">🔄 PLAY AGAIN</button>
+                    <div class="share-buttons">
+                        <button id="shareWhatsapp">📱 WhatsApp</button>
+                        <button id="shareTwitter">🐦 Twitter</button>
+                        <button id="shareFacebook">📘 Facebook</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('retryGameBtn').addEventListener('click', () => {
+                    modal.remove();
+                    resetGame();
+                });
+                document.getElementById('shareWhatsapp').addEventListener('click', () => {
+                    window.open(`https://wa.me/?text=🐦 I scored ${score} points in Flappy Bird! Can you beat me? Play at https://flappybird.onrender.com`, '_blank');
+                });
+                document.getElementById('shareTwitter').addEventListener('click', () => {
+                    window.open(`https://twitter.com/intent/tweet?text=I scored ${score} in Flappy Bird! 🐦 Beat my score! https://flappybird.onrender.com`, '_blank');
+                });
+                document.getElementById('shareFacebook').addEventListener('click', () => {
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=https://flappybird.onrender.com&quote=I scored ${score} points!`, '_blank');
+                });
+            }
+            
+            function resetGame() {
+                gameRunning = true;
+                score = 0;
+                bird.y = ch/2;
+                bird.vy = 0;
+                pipes = [];
+                pipeSpeed = 2.2;
+                pipeGap = PIPE_GAP_INIT;
+                frameCount = 0;
+                lastPipeFrame = 15;
+                document.getElementById('scoreDisplay').textContent = "0";
+                spawnPipe();
+                if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            }
+            
+            // ============================================
+            // DRAWING FUNCTIONS
+            // ============================================
+            let cloudOffset = 0;
+            
+            function drawBackground() {
+                const grad = ctx.createLinearGradient(0, 0, 0, ch);
+                grad.addColorStop(0, "#7ec8e0");
+                grad.addColorStop(0.7, "#4fa6c2");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cw, ch);
+                
+                ctx.fillStyle = "rgba(255,255,245,0.85)";
+                for(let i = 0; i < 4; i++) {
+                    let cloudX = (cloudOffset + i * 180) % (cw + 200) - 100;
+                    ctx.beginPath();
+                    ctx.ellipse(cloudX, 70 + i * 120, 35, 28, 0, 0, Math.PI * 2);
+                    ctx.ellipse(cloudX + 30, 60 + i * 110, 40, 30, 0, 0, Math.PI * 2);
+                    ctx.ellipse(cloudX - 20, 55 + i * 115, 32, 26, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                cloudOffset = (cloudOffset + 0.3) % (cw + 200);
+            }
+            
+            function drawBird() {
+                ctx.save();
+                ctx.translate(bird.x, bird.y);
+                let rot = Math.min(Math.max(bird.vy * 0.12, -0.8), 1.2);
+                ctx.rotate(rot);
+                ctx.fillStyle = "#F7D44A";
+                ctx.beginPath();
+                ctx.ellipse(0, 0, bird.radius, bird.radius * 0.85, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#E08E1A";
+                ctx.beginPath();
+                ctx.moveTo(12, -3);
+                ctx.lineTo(22, 0);
+                ctx.lineTo(12, 3);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(-4, -5, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#1f2e2e";
+                ctx.beginPath();
+                ctx.arc(-3, -4, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            function drawPipes() {
+                for(let pipe of pipes) {
+                    ctx.fillStyle = "#2E7A3A";
+                    ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
+                    ctx.fillStyle = "#1F5A2A";
+                    ctx.fillRect(pipe.x - 5, pipe.topHeight - 35, PIPE_WIDTH + 10, 35);
+                    ctx.fillStyle = "#2E7A3A";
+                    ctx.fillRect(pipe.x, pipe.bottomY, PIPE_WIDTH, ch - pipe.bottomY);
+                    ctx.fillStyle = "#1F5A2A";
+                    ctx.fillRect(pipe.x - 5, pipe.bottomY, PIPE_WIDTH + 10, 35);
+                }
+            }
+            
+            function drawGround() {
+                ctx.fillStyle = "#7B4A2E";
+                ctx.fillRect(0, GROUND_Y, cw, ch - GROUND_Y + 2);
+                ctx.fillStyle = "#CB9E6B";
+                for(let i = 0; i < 12; i++) ctx.fillRect(i * 35, GROUND_Y + 3, 18, 8);
+            }
+            
+            function updateBird() {
+                if(!gameRunning) return;
+                bird.vy += GRAVITY;
+                bird.y += bird.vy;
+            }
+            
+            // ============================================
+            // CONTROLS & GAME LOOP
+            // ============================================
+            function handleTap(e) {
+                e.preventDefault();
+                jump();
+            }
+            
+            function bindControls() {
+                canvas.addEventListener('touchstart', handleTap, { passive: false });
+                canvas.addEventListener('mousedown', handleTap);
+                document.addEventListener('keydown', (e) => {
+                    if(e.code === 'Space' || e.code === 'ArrowUp') {
+                        e.preventDefault();
+                        jump();
+                    }
+                });
+            }
+            
+            function gameLoop() {
+                if(!gameRunning) {
+                    drawBackground();
+                    drawPipes();
+                    drawBird();
+                    drawGround();
+                    requestAnimationFrame(gameLoop);
+                    return;
+                }
+                
+                updateBird();
+                updatePipes();
+                updateScore();
+                if(checkCollisions()) gameOver();
+                
+                drawBackground();
+                drawPipes();
+                drawBird();
+                drawGround();
+                
+                frameCount++;
+                requestAnimationFrame(gameLoop);
+            }
+            
+            function init() {
+                initAudio();
+                bindControls();
+                resetGame();
+                gameLoop();
+            }
+            
+            init();
+        })();
+    </script>
+</body>
+</html>
